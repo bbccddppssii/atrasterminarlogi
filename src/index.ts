@@ -29,6 +29,18 @@ app.use("/api/sesion",SesionRouter)
 app.use("/api/login",loginAuth);
 app.use("/api/perfil",getPerfil);
 
+app.get('*', function (req, res) {    
+    const protocol = req.protocol;
+    const host = req.hostname;
+    const url = req.originalUrl;
+    const port = process.env.PORT || 4000;
+  
+    const fullUrl = `${protocol}://${host}:${port}${url}`
+      
+    const responseString = `Full URL is: ${fullUrl}`;                       
+    res.send(responseString);  
+})
+
 
 app.listen(PORT, () => {
   console.log('Server running at', PORT)
