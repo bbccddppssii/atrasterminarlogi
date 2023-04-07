@@ -1,8 +1,8 @@
 {
   "scripts": {
     "dev": "ts-node-dev ./src/index.ts",
-    "start": "node ./build/src/index.js",
-    "build": "npm i & tsc"
+    "start": "npm run build & node ./build/src/index.js",
+    "build": "tsc"
   },
   "dependencies": {
     "@typegoose/typegoose": "^10.1.0",
