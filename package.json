@@ -2,7 +2,7 @@
   "scripts": {
     "dev": "ts-node-dev ./src/index.ts",
     "start": "node ./build/src/index.js",
-    "build": "tsc"
+    "build": "npm i & tsc"
   },
   "dependencies": {
     "@typegoose/typegoose": "^10.1.0",
