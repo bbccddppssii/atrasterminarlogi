@@ -118,6 +118,10 @@ const createCita: RequestHandler = async (req, res) => {
         //If there are not errors save
         await cita.save();
 
+        await cita.populate("estudiante");
+
+        console.log(cita);
+
         return res.json(cita);
     } catch (error) {
         console.log(error)
@@ -243,7 +247,8 @@ const getAllMyCitas: RequestHandler = async (req, res) => {
             $or: [{ psicologoPrincipal: req.psicologo?.id }, { psicologosColaboradores: { $in: [req.psicologo?.id] } }]
         }
 
-        const citas = await CitaModel.find(query)
+        const citas = await CitaModel.find(query).populate("estudiante")
+
         if (!citas) {
             return res.status(404).json({ message: "No se han encotrado citas !" })
         }
