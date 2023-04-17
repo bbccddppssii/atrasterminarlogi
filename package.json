@@ -1,7 +1,7 @@
 {
   "scripts": {
     "dev": "ts-node-dev ./src/index.ts",
-    "start": "node ./build/src/index.js",
+    "start": "node TZ='America/El_Salvador' ./build/src/index.js",
     "build": "tsc"
   },
   "dependencies": {
