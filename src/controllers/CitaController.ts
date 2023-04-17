@@ -1,9 +1,8 @@
 import { BeAnObject, IObjectWithTypegooseFunction } from "@typegoose/typegoose/lib/types";
 import { RequestHandler } from "express";
 import moment from "moment";
-import mongoose, { isValidObjectId, ObjectId } from "mongoose";
-import { isAwaitExpression } from "typescript";
-import z, { string, ZodError } from "zod"
+import mongoose, { isValidObjectId } from "mongoose";
+import z, { ZodError } from "zod"
 import { listZodErrors } from "../helpers/listZodErrors";
 import CitaModel, { Cita, TipoCaso } from "../models/Cita";
 import EstudianteModel from "../models/Estudiante";
@@ -22,7 +21,7 @@ interface CitaValidate {
     message: string,
     citaId?: mongoose.Types.ObjectId
 }
-interface DeleteCitasBody{
+interface DeleteCitasBody {
     citas: Array<string>
 }
 interface PostPoneObject {
@@ -118,9 +117,10 @@ const createCita: RequestHandler = async (req, res) => {
         //If there are not errors save
         await cita.save();
 
-        await cita.populate("estudiante");
+        await cita.populate({ path: 'estudiante', select: "-password" });
 
         console.log(cita);
+
 
         return res.json(cita);
     } catch (error) {
@@ -279,6 +279,42 @@ const getCita: RequestHandler = async (req, res) => {
     }
 }
 
+const getCitaByRange: RequestHandler = async (req, res) => {
+    try {
+        
+        const { inicio, final } = z.object({
+            inicio: z.string().or(z.date()),
+            final: z.string().or(z.date())
+        }).parse(req.body)
+
+
+        const query = {
+            $or: [
+                { psicologoPrincipal: req.psicologo?.id },
+                { psicologosColaboradores: { $in: [req.psicologo?.id] } }
+            ],
+            fecha: {
+                $gte: new Date(inicio),
+                $lte: new Date(final)
+            }
+        }
+
+        const citas = await CitaModel.find(query).populate("estudiante")
+
+        if (!citas) {
+            return res.status(404).json({ message: "No se han encotrado citas !" })
+        }
+
+        return res.status(200).json(citas)
+    } catch (error) {
+        console.log(error)
+        if (error instanceof ZodError) {
+            return res.status(500).json(listZodErrors(error));
+        }
+        return res.status(400).json(error)
+    }
+}
+
 const validateCitas = async (fechas: Array<CitaDate>, citas: CitasPsicologos): Promise<CitaValidate> => {
     let citaID;
 
@@ -389,23 +425,23 @@ const postPoneCitas: RequestHandler = async (req, res) => {
     }
 }
 
-const deleteMultipleCitas: RequestHandler = async(req,res)=>{
+const deleteMultipleCitas: RequestHandler = async (req, res) => {
     try {
-        const {citas} : DeleteCitasBody  = req.body
-        
+        const { citas }: DeleteCitasBody = req.body
+
         //Check if citas id are valid
-        const validIDs = citas.every((id)=> isValidObjectId(id))
-        
-        if(!validIDs){
-            return res.status(400).json({message: "Alguna cita no tiene un id valido"})
+        const validIDs = citas.every((id) => isValidObjectId(id))
+
+        if (!validIDs) {
+            return res.status(400).json({ message: "Alguna cita no tiene un id valido" })
         }
 
 
         await CitaModel.deleteMany({
-            _id:{$in: citas}
+            _id: { $in: citas }
         });
 
-        return res.status(200).json({message: "Citas eliminadas !"})
+        return res.status(200).json({ message: "Citas eliminadas !" })
     } catch (error) {
         console.log(error)
         return res.status(400).json(error)
@@ -418,6 +454,7 @@ export {
     deleteCita,
     getAllMyCitas,
     getCita,
+    getCitaByRange,
     postPoneCitas,
-    deleteMultipleCitas
+    deleteMultipleCitas,
 }

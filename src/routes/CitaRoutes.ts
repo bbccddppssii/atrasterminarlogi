@@ -7,12 +7,14 @@ import {
     getCita,
     postPoneCitas,
     deleteMultipleCitas,
+    getCitaByRange,
 } from "../controllers/CitaController";
 import { checkObjectId } from "../middleware/checkObjectId";
 import { checkPsicoAuth } from "../middleware/checkPsicoAuth";
 
 const router = Router()
 
+router.post("/rango",checkPsicoAuth,getCitaByRange)
 router.post("/posponer",checkPsicoAuth,postPoneCitas)
 router.post("/eliminar-citas",checkPsicoAuth,deleteMultipleCitas)
 
