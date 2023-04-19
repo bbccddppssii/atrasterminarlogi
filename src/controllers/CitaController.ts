@@ -278,10 +278,46 @@ const getCita: RequestHandler = async (req, res) => {
         return res.status(400).json(error)
     }
 }
+const getCitaMonth: RequestHandler = async (req, res) => {
+    try {
 
+        const { mes, year } = z.object({
+            mes: z.number(),
+            year: z.number()
+        }).parse(req.body);
+
+        const firstDay = new Date(year, mes - 1, 1).getDate();
+        const lastDay = new Date(year, mes, 0);
+
+        const query = {
+            $or: [
+                { psicologoPrincipal: req.psicologo?.id },
+                { psicologosColaboradores: { $in: [req.psicologo?.id] } }
+            ],
+            fecha: {
+                $gte: firstDay,
+                $lte: lastDay,
+            }
+        }
+
+        const citas = await CitaModel.find(query).populate({path: 'estudiante',  select: '-password -createdAt -updatedAt -__v'})
+
+        if (!citas) {
+            return res.status(404).json({ message: "No se han encotrado citas !" })
+        }
+
+        return res.status(200).json(citas)
+    } catch (error) {
+        console.log(error)
+        if (error instanceof ZodError) {
+            return res.status(500).json(listZodErrors(error));
+        }
+        return res.status(400).json(error)
+    }
+}
 const getCitaByRange: RequestHandler = async (req, res) => {
     try {
-        
+
         const { inicio, final } = z.object({
             inicio: z.string().or(z.date()),
             final: z.string().or(z.date())
@@ -454,6 +490,7 @@ export {
     deleteCita,
     getAllMyCitas,
     getCita,
+    getCitaMonth,
     getCitaByRange,
     postPoneCitas,
     deleteMultipleCitas,

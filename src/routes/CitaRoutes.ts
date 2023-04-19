@@ -8,6 +8,7 @@ import {
     postPoneCitas,
     deleteMultipleCitas,
     getCitaByRange,
+    getCitaMonth,
 } from "../controllers/CitaController";
 import { checkObjectId } from "../middleware/checkObjectId";
 import { checkPsicoAuth } from "../middleware/checkPsicoAuth";
@@ -15,6 +16,7 @@ import { checkPsicoAuth } from "../middleware/checkPsicoAuth";
 const router = Router()
 
 router.post("/rango",checkPsicoAuth,getCitaByRange)
+router.post("/mes",checkPsicoAuth,getCitaMonth)
 router.post("/posponer",checkPsicoAuth,postPoneCitas)
 router.post("/eliminar-citas",checkPsicoAuth,deleteMultipleCitas)
 
