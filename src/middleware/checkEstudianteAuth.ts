@@ -1,13 +1,13 @@
-import {  RequestHandler} from "express";
+import { RequestHandler} from "express";
 import jwt from "jsonwebtoken"
-import PsicologoModel from "../models/Psicologos";
+import EstudianteModel from "../models/Estudiante";
 
 
 interface TokenJWT extends jwt.JwtPayload{
     id: string
 }
 
-export const checkPsicoAuth : RequestHandler = async (req,res,next) => {
+export const checkEstudianteAuth : RequestHandler = async (req,res,next) => {
     let token;
     if (
         req.headers.authorization &&
@@ -18,10 +18,10 @@ export const checkPsicoAuth : RequestHandler = async (req,res,next) => {
             const jwtToken = req.headers.authorization.split(" ")[1];
             token = jwt.verify(jwtToken, process.env.JWT_SECRET as string) as TokenJWT;
 
-            const psicologo = await PsicologoModel.findById(token.id).where("role").equals("psicologo").select("-password -createdAt -updatedAt -__v");
+            const estudiante = await EstudianteModel.findById(token.id).select("-password -createdAt -updatedAt -__v");
             
-            req.psicologo = psicologo
-            if (psicologo) return next();
+            req.estudiante = estudiante
+            if (estudiante) return next();
 
         } catch (error) {
             console.log(error)
@@ -33,6 +33,6 @@ export const checkPsicoAuth : RequestHandler = async (req,res,next) => {
 
     return res.status(400).json({
         status: "error",
-        msg: "No estas autenticado como psicologo !",
+        msg: "No estas autenticado como estudiante !",
     });
 };

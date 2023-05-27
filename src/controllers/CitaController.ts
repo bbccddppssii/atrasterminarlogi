@@ -175,10 +175,14 @@ const updateCita: RequestHandler = async (req, res) => {
                 fecha: {
                     $gte: beforeTime,
                     $lt: afterTime,
+                },
+                id: {
+                    $ne: id
                 }
             })
 
-            if (sameRangeHourCita.length) {
+
+            if (sameRangeHourCita.length && sameRangeHourCita.some(cita => cita.id !== id)) {
                 return res.status(400).json({ message: 'Ya hay una cita para esa fecha y hora' })
             }
 
@@ -191,7 +195,7 @@ const updateCita: RequestHandler = async (req, res) => {
                 { psicologoPrincipal: req.psicologo?.id },
                 { psicologosColaboradores: { $in: [req.psicologo?.id] } }
             ]
-        }, cita, { new: true })
+        }, cita, { new: true, populate: {path: 'estudiante'}  })
 
         if (!citaFounded) {
             return res.status(404).json({ message: "No se a encontrado esa cita" })
@@ -300,7 +304,7 @@ const getCitaMonth: RequestHandler = async (req, res) => {
             }
         }
 
-        const citas = await CitaModel.find(query).populate({path: 'estudiante',  select: '-password -createdAt -updatedAt -__v'})
+        const citas = await CitaModel.find(query).populate({ path: 'estudiante', select: '-password -createdAt -updatedAt -__v' })
 
         if (!citas) {
             return res.status(404).json({ message: "No se han encotrado citas !" })
@@ -347,6 +351,24 @@ const getCitaByRange: RequestHandler = async (req, res) => {
         if (error instanceof ZodError) {
             return res.status(500).json(listZodErrors(error));
         }
+        return res.status(400).json(error)
+    }
+}
+
+const getMisCitas: RequestHandler = async (req, res) => {
+    try {
+
+        const query = { estudiante: req.estudiante?._id }
+
+        const citas = await CitaModel.find(query)
+
+        if (!citas) {
+            return res.status(404).json({ message: "No se han encotrado citas !" })
+        }
+
+        return res.status(200).json(citas)
+    } catch (error) {
+        console.log(error)
         return res.status(400).json(error)
     }
 }
@@ -484,6 +506,8 @@ const deleteMultipleCitas: RequestHandler = async (req, res) => {
     }
 }
 
+
+
 export {
     createCita,
     updateCita,
@@ -494,4 +518,5 @@ export {
     getCitaByRange,
     postPoneCitas,
     deleteMultipleCitas,
+    getMisCitas,
 }
